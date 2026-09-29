@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${CEMA_DB_USER:-cema_admin}
+      POSTGRES_PASSWORD: ${CEMA_DB_PASSWORD:?Set CEMA_DB_PASSWORD in .env}
+      POSTGRES_DB: cema_bank
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - cema-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  cema-db-data:
