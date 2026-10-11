@@ -1,73 +1,148 @@
-# CEMA Bank — prototipo bancario local
+# CEMA Bank
 
-Aplicación de demostración con Spring Boot, PostgreSQL, una web React y un cajero ATM React. **No es una entidad financiera. No recibe dinero real ni aprueba créditos automáticamente.** Los saldos, depósitos, retiros e inversiones son simulados. Las transferencias funcionan solo entre cuentas CEMA de esta instalación.
+CEMA Bank es un prototipo local de banca digital que permite explorar el recorrido de un cliente y de un equipo bancario en una misma aplicación. Reúne una web, un cajero simulado y una API con datos persistentes. **No es un banco, no procesa dinero real y no cumple los requisitos para operar como institución financiera en México.**
 
-## Funciones
+El proyecto está en desarrollo y forma parte de mi portafolio. Muestra cómo abordo un dominio nuevo, conecto interfaces con un backend y pruebo reglas de acceso y operaciones. La población demo permite recorrer dos años de movimientos sintéticos sin usar datos de terceros.
 
-- Registro e inicio de sesión, con contraseñas cifradas y bloqueo temporal tras cinco intentos fallidos.
-- Cuentas, saldo, historial, depósitos, retiros, transferencias internas, inversiones simuladas y solicitudes de crédito pendientes.
-- PIN de cajero configurado por el cliente, almacenado como hash BCrypt.
-- Cajero local: saldo, últimos movimientos, depósito y retiro simulados, cambio de PIN y comprobante imprimible.
-- Sesiones con token aleatorio, hash en base de datos, vencimiento de 30 minutos y cierre de sesión. Los frontends conservan el token solo en memoria.
-- Modo demo opcional: 15 perfiles de equipo y 100 clientes de tres niveles, con dos años de movimientos sintéticos.
-- Estado de cuenta de prueba por periodo, con paginación, saldo inicial/final, fecha, referencia, canal y detalle de cargos/abonos.
-- Roles diferenciados: administración y ejecutivos revisan créditos; analistas consultan sin decidir; clientes solo ven sus cuentas.
+## Funciones actuales
 
-## Requisitos
+- Registro, inicio y cierre de sesión; roles de cliente, analista, ejecutivo y administrador.
+- Saldo, movimientos, estado de cuenta de prueba, depósitos, retiros, transferencias internas, inversiones simuladas y solicitudes de crédito.
+- Cajero simulado con acceso por cuenta y PIN, consulta, depósito, retiro y comprobante imprimible.
+- Revisión de créditos por personal autorizado y registro de cambios de rol.
+- Modo demo opcional con 15 perfiles de equipo, 100 clientes y credenciales ficticias consultables en la interfaz. Se carga una sola vez por base de datos.
 
-Java 17+, Maven, Docker u Orbstack, Node.js y pnpm. No se usa npm. Las instalaciones de pnpm se mantienen dentro de `frontend/` y `frontend-atm/`, con scripts automáticos desactivados mediante `.npmrc`.
+## Stack
 
-## Arranque local
+Java 17+, Spring Boot 3.5, Maven, PostgreSQL 15, React 19, Vite 8 y pnpm. Los frontends se instalan con scripts automáticos desactivados.
 
-1. Crea un archivo `.env` en la raíz con una contraseña propia para la base de datos:
+## Instalación y uso local
 
-   ```dotenv
-   CEMA_DB_PASSWORD=elige_una_contrasena_larga_y_unica
-   CEMA_DEMO_MODE=true
-   ```
+Requiere Java 17+, Maven, Docker u OrbStack, [Node.js 22.12+](https://vite.dev/guide/), pnpm, `curl` y `lsof`. Se verificó con pnpm 12.6.
 
-2. Desde la raíz, ejecuta `docker compose up -d`.
-3. En otra terminal, exporta ambas variables de `.env` y ejecuta `mvn spring-boot:run`, o usa `./start_cema.sh`, que lee solo estas dos claves del archivo como texto.
-4. En `frontend/`, ejecuta `pnpm install --ignore-scripts --frozen-lockfile` y `pnpm exec vite`. Abre `http://localhost:5173`.
-5. En `frontend-atm/`, ejecuta `pnpm install --ignore-scripts --frozen-lockfile` y `pnpm exec vite`. Abre `http://localhost:5174`.
+1. Copia `.env.example` a `.env`. Asigna una contraseña local larga y única a `CEMA_DB_PASSWORD`. Cambia `CEMA_DEMO_MODE=true` si quieres las cuentas de demostración.
+2. Ejecuta `pnpm install --ignore-scripts --frozen-lockfile` dentro de `frontend/` y de `frontend-atm/`. Los archivos `.npmrc` también desactivan scripts automáticos.
+3. Desde la raíz, ejecuta `sh start_cema.sh`.
+4. Abre la web en `http://127.0.0.1:5173` y el cajero en `http://127.0.0.1:5174`. La API usa `http://127.0.0.1:8080/api`. Pulsa Ctrl+C en la terminal del script para detener los tres servidores; PostgreSQL permanece activo.
 
-`sh start_cema.sh` (o `./start_cema.sh`) recompila el backend, espera a que los datos demo estén listos e inicia web y ATM en los puertos indicados. Si un puerto está ocupado, muestra el proceso que lo usa. Al salir detiene los tres servidores iniciados por el script; PostgreSQL queda disponible. El script no ejecuta el contenido de `.env`.
+En modo demo, la web muestra **Usuarios demo** y ambos accesos tienen un buscador de credenciales. Esas claves son públicas e intencionalmente ficticias. **Activa el modo demo solo en un entorno local aislado.** Para desactivarlo, cambia `CEMA_DEMO_MODE=false`, reinicia y recarga las interfaces. Las cuentas demo dejan de autenticar, aunque su historial permanece en la base local.
 
-La base de datos escucha únicamente en `127.0.0.1:5433`. La API escucha por defecto en `127.0.0.1:8080`. La web y el cajero usan el proxy local de Vite para `/api`.
+Para probar una cuenta nueva, regístrala en la web, inicia sesión y configura un PIN antes de entrar al cajero. Los importes y saldos siempre son simulados.
 
-## Primer uso
+## Estructura
 
-1. Crea una cuenta desde la web. La contraseña debe tener entre 12 y 128 caracteres.
-2. Inicia sesión y busca tu número de cuenta en el panel.
-3. Configura un PIN de 4 a 6 dígitos en la operación **Configurar PIN**.
-4. Abre el cajero y entra con el número de cuenta y el PIN.
-
-Con `CEMA_DEMO_MODE=true`, el arranque crea la población ficticia **una sola vez por base de datos**. La marca `cema-demo-2026-v1` impide duplicarla en los siguientes arranques. La web muestra **Usuarios demo** con nombre, nivel, rol, usuario, contraseña, número de cuenta interno y PIN ATM. Los accesos web y ATM también tienen un buscador que muestra esas credenciales y rellena los campos al pulsar **Usar**. Las contraseñas y PIN se guardan solo como hash en la base de datos; el catálogo público vuelve a calcular las claves de prueba. El PIN mostrado es el inicial y deja de servir si el usuario lo cambia.
-
-Para retirar el acceso rápido, cambia `CEMA_DEMO_MODE=false` en `.env`, reinicia el backend y recarga ambas interfaces. Se ocultan el catálogo y los buscadores, y los usuarios `demo_` dejan de poder iniciar sesión o usar tokens anteriores. Sus registros siguen en la base de prueba para conservar el historial; desactivar el modo no borra datos.
-
-La población se reparte en 2 administradores, 6 ejecutivos, 7 analistas, 60 clientes Esencial, 30 Preferente y 10 Patrimonial. Todos tienen depósitos, pagos, retiros y transferencias internas simuladas, con saldo coherente durante 24 meses. Los niveles aplican límites por transferencia de prueba: $25,000, $100,000 y $250,000 MXN por operación respectivamente. Las cuentas del equipo usan el límite de $250,000. Estos límites son reglas del prototipo, no límites legales mexicanos.
-
-## Seguridad y límites
-
-- Los endpoints de dinero comprueban el propietario de la cuenta e importes válidos. Las transferencias bloquean las filas de ambas cuentas y registran los dos movimientos en una transacción.
-- La API limita CORS a los orígenes locales configurados por `CEMA_CORS_ORIGINS`. No usa cookies ni autenticación básica. CSRF se desactiva porque la autenticación usa el encabezado `Authorization` y los clientes no guardan sesión en cookies.
-- La contraseña de PostgreSQL se configura mediante variable de entorno. `.env`, `node_modules`, `dist` y `target` se ignoran en el control de versiones.
-- El catálogo muestra credenciales administrativas intencionalmente **solo** en modo demo. Es inseguro publicar este modo en Internet. La clave de la base de datos local está en `.env` con permisos `600`.
-- `spring.jpa.hibernate.ddl-auto=update` sirve para desarrollo. Para producción se necesitarían migraciones versionadas, HTTPS, un proveedor de identidad, controles antifraude, límites operativos, observabilidad y pruebas de penetración. Este prototipo no debe desplegarse como banco real.
+- `src/main/`: API, reglas de negocio, persistencia y datos demo.
+- `src/test/`: pruebas de integración.
+- `frontend/`: web para clientes y personal.
+- `frontend-atm/`: interfaz del cajero simulado.
+- `docker-compose.yml` y `start_cema.sh`: entorno local.
+- `SECURITY_AUDIT.md`: revisión de seguridad fechada y límites conocidos.
 
 ## Verificación
 
-- Backend: `mvn test`
-- Web: `cd frontend && pnpm exec vite build && pnpm audit --audit-level low`
-- ATM: `cd frontend-atm && pnpm exec vite build && pnpm audit --audit-level low`
+Ejecuta `mvn test` en la raíz y `pnpm exec vite build` en cada frontend. Para revisar dependencias JavaScript, ejecuta `pnpm audit --audit-level low` en ambos directorios. Una auditoría pasada no garantiza ausencia de vulnerabilidades futuras.
 
-## Información mexicana y alcance de la simulación
+## Límites y evolución
 
-La vista de movimientos incluye datos informativos que ayudan a leer un estado de cuenta: titular, identificador de cuenta, moneda, periodo, saldos, cargos y abonos, fecha, concepto, canal y referencia. Se inspira en las guías de [CONDUSEF sobre estados de cuenta](https://www.condusef.gob.mx/index.php?idc=2822&idcat=3&p=contenido). Los identificadores de 16 dígitos son **internos y ficticios**, no CLABE ni cuentas SPEI; [Banxico explica que una CLABE real tiene 18 dígitos](https://www.banxico.org.mx/footer-es/preguntas-frecuentes-dudas-ba.html).
+Las cuentas de 16 dígitos son identificadores internos, no CLABE; no hay SPEI, KYC, prevención de lavado, conciliación ni emisión de estados de cuenta oficiales. La base usa `ddl-auto=update` para desarrollo. [La auditoría](SECURITY_AUDIT.md) registra avisos pendientes en un paquete Spring y explica su alcance en este código. Antes de cualquier uso real se necesitarían migraciones, controles de fraude y abuso, protección de datos, seguridad operativa y revisión legal independiente. La siguiente etapa prevista es fortalecer esas bases y ampliar las pruebas de los flujos principales.
 
-Los nombres son combinaciones ficticias. No se generan RFC, CURP, domicilios, documentos de identidad, teléfonos ni correo de personas reales. Esto reduce la exposición de datos, de acuerdo con el principio de minimización de la [Ley Federal de Protección de Datos Personales en Posesión de los Particulares](https://www.diputados.gob.mx/LeyesBiblio/pdf/LFPDPPP.pdf). **El prototipo no satisface los procesos de identificación de clientes, prevención de lavado de dinero, avisos de privacidad completos, reportes regulatorios ni emisión formal de estados de cuenta de una institución autorizada.** Requiere evaluación jurídica, controles operativos y auditoría independiente antes de cualquier uso real.
+## Autor y licencia
 
-## Administración de créditos en la demo
+Yael de los Santos · 2026 · [LinkedIn](https://www.linkedin.com/in/yaelsts) · Teléfono: 2205704385.
 
-Con modo demo activado, entra con una identidad del catálogo. Administración y ejecutivos pueden aprobar o rechazar una solicitud; el analista solo consulta. Los administradores además pueden cambiar roles, excepto el suyo, y consultar el registro de cambios. Una aprobación abona saldo simulado y registra el movimiento; una solicitud ya revisada no se puede procesar de nuevo.
+El código propio se distribuye bajo la [licencia MIT](LICENSE). Las dependencias y marcas de terceros conservan sus condiciones respectivas.
+a# CEMA Bank
+
+Local banking prototype built with Spring Boot, PostgreSQL and React.
+
+It simulates common banking flows for learning and portfolio purposes. It is not a real financial institution and must not be used with real money or personal financial data.
+
+## What it includes
+
+- Registration and login with password hashing and temporary lockout after repeated failures.
+- Customer accounts, balances and transaction history.
+- Simulated deposits, withdrawals and internal transfers.
+- Simulated investments and credit requests.
+- Role-based access for administrators, executives, analysts and customers.
+- Local ATM interface with PIN authentication.
+- Optional demo population with synthetic users and transactions.
+
+## Architecture
+
+```text
+React web client ─┐
+                  ├─→ Spring Boot API ─→ PostgreSQL
+React ATM client ─┘
+```
+
+The web and ATM clients run separately and consume the same backend API.
+
+## Security decisions
+
+- BCrypt for passwords and ATM PINs.
+- Random session tokens stored as hashes in the database.
+- Authorization checks on protected operations.
+- Internal transfers executed inside a transaction with row locking.
+- PostgreSQL credentials loaded from environment variables.
+- CORS restricted to configured local origins.
+
+This is still a prototype. A production financial system would require stronger identity, fraud controls, migrations, HTTPS, observability, regulatory processes and independent security review.
+
+## Stack
+
+Java 17+ · Spring Boot · PostgreSQL · React · Vite · Docker · Maven · pnpm
+
+## Run locally
+
+Create `.env` in the project root:
+
+```dotenv
+CEMA_DB_PASSWORD=choose_a_local_password
+CEMA_DEMO_MODE=true
+```
+
+Start PostgreSQL:
+
+```bash
+docker compose up -d
+```
+
+Start the backend:
+
+```bash
+mvn spring-boot:run
+```
+
+Start the web client:
+
+```bash
+cd frontend
+pnpm install --ignore-scripts --frozen-lockfile
+pnpm exec vite
+```
+
+Start the ATM client:
+
+```bash
+cd frontend-atm
+pnpm install --ignore-scripts --frozen-lockfile
+pnpm exec vite
+```
+
+## Verification
+
+```bash
+mvn test
+cd frontend && pnpm exec vite build
+cd frontend-atm && pnpm exec vite build
+```
+
+## Demo mode
+
+With `CEMA_DEMO_MODE=true`, the application creates synthetic users and transaction history for testing. Demo credentials are intentionally exposed only inside the local demo interface.
+
+Do not expose demo mode to the public Internet.
+
+## Scope
+
+All account identifiers, balances and transactions are fictitious. The project does not implement real banking integrations, SPEI, CLABE issuance, KYC, AML or regulatory reporting.

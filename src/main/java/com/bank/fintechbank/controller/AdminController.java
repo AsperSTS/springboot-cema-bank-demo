@@ -82,7 +82,6 @@ public class AdminController {
         long totalAccounts = accountRepository.count();
         long totalTransactions = transactionRepository.count();
         
-        // Sum of all balances
         java.math.BigDecimal totalMoney = accountRepository.totalBalance();
 
         stats.put("totalUsers", totalUsers);

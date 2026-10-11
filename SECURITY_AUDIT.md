@@ -1,5 +1,15 @@
 # Auditoría de seguridad — 28 septiembre 2026
 
+Esta es una revisión histórica del entorno local en la fecha indicada. Sus resultados no certifican cumplimiento normativo ni describen necesariamente el estado actual de las dependencias. Vuelve a ejecutar las pruebas y auditorías antes de publicar o desplegar.
+
+## Actualización del 11 de octubre de 2026
+
+Una nueva ejecución de `pnpm audit --audit-level low` detectó un aviso alto en `source-map-js` 1.2.1, dependencia indirecta de Vite. Ambos frontends fijan ahora la versión 1.2.2, indicada como corregida en [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q). Tras el cambio, las dos auditorías terminaron sin avisos conocidos.
+
+Se volvió a consultar OSV para las 94 dependencias Maven resueltas. Jackson 2.21.6 tenía avisos de consumo excesivo de recursos; el BOM se actualizó a [2.21.7](https://github.com/advisories/GHSA-cxp5-3px4-pw24). La nueva consulta dejó **un paquete señalado**: `spring-webmvc` 6.2.19, por [CVE-2026-47890](https://spring.io/security/cve-2026-47890/) y [CVE-2026-47884](https://spring.io/security/cve-2026-47884/). La primera requiere SSE con fragmentos de vista y datos controlados por un atacante; la segunda requiere `XsltView` y una ruta comodín que renderice vistas. No se encontraron esas configuraciones en esta API REST, pero el paquete continúa en un rango afectado. Spring publica la corrección 6.2.20 solo para soporte empresarial; la corrección de código abierto está en Spring Framework 7.0.9. Una migración a la rama nueva requiere trabajo y pruebas aparte. No debe interpretarse esta evaluación de alcance como una garantía de seguridad para un despliegue público.
+
+Las siete pruebas de integración pasaron tras retirar dos dependencias Java sin uso directo. La consulta OSV de septiembre que figura abajo es histórica; la revisión actual muestra los hallazgos anteriores.
+
 ## Resultado verificable
 
 - Se revisó el árbol Maven resuelto (98 dependencias, incluidas las de prueba) contra la API pública de OSV. Resultado final: **0 avisos conocidos** para las versiones resueltas en la fecha de revisión.

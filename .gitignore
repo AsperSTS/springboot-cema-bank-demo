@@ -1,28 +1,40 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# Build output and installed packages
+/target/
+**/node_modules/
+**/dist/
+/.pnpm-store/
+/.m2-repository/
 
-### VS Code ###
+# Local databases, exports and logs
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.csv
+*.log
+/logs/
+/data/
+/exports/
+
+# Editor and operating system files
+.idea/
 .vscode/
-
-### Mac OS ###
+*.iml
+*.iws
+*.ipr
 .DS_Store
 
-### Frontend ###
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-frontend/.env.local
-
-### Log ###
-*.log
-.env
-frontend-atm/node_modules/
-frontend-atm/dist/
+# Generated source list
+/sources.txt

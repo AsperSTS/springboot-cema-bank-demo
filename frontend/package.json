@@ -1,7 +1,9 @@
 {
-  "name": "frontend",
+  "name": "cema-bank-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": { "name": "Yael de los Santos", "url": "https://www.linkedin.com/in/yaelsts" },
   "type": "module",
   "scripts": {
     "dev": "vite",

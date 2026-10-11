@@ -3,7 +3,7 @@ async function request(path, method = 'GET', data) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(`/api${path}`, { method, headers: { ...(data ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: data ? JSON.stringify(data) : undefined, signal: controller.signal, credentials: 'omit' });
+    const response = await fetch(`/api${path}`, { method, headers: { ...(data ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(data ? { body: JSON.stringify(data) } : {}), signal: controller.signal, credentials: 'omit' });
     const result = await response.json().catch(() => ({}));
     if (response.status === 401 && token) token = null;
     if (!response.ok) { const error = new Error(result.error || 'No fue posible completar la operación.'); error.status = response.status; throw error; }

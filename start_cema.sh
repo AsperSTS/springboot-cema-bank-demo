@@ -15,6 +15,10 @@ if [ -z "${CEMA_DB_PASSWORD:-}" ]; then
   echo 'Configura CEMA_DB_PASSWORD en .env o en el entorno antes de iniciar.' >&2
   exit 1
 fi
+if ! command -v lsof >/dev/null 2>&1; then
+  echo 'Falta lsof, necesario para comprobar los puertos antes de iniciar.' >&2
+  exit 1
+fi
 
 # Evita mostrar una dirección que en realidad usa otro servidor.
 for port in 8080 5173 5174; do
